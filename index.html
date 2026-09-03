@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1B5FAE">
+<meta name="description" content="تطبيق إدارة تحصيل إيجارات المستأجرين - سوق 48">
+<title>سوق 48 - إدارة التحصيل</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<!-- خط Cairo اختياري: يتم تحميله فقط عند توفر إنترنت، وإذا تعذّر تحميله (بدون نت) يستخدم التطبيق خطوط النظام تلقائياً بدون أي تعطيل لعمل التطبيق -->
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#1B5FAE; --primary-dark:#124480; --primary-light:#E8F0FB;
+    --success:#1E7E45; --success-light:#E6F6EC;
+    --danger:#C0392B; --danger-light:#FBEAE8;
+    --bg:#F3F5F8; --surface:#FFFFFF;
+    --text:#1F2430; --text-muted:#6B7280; --border:#E3E6EA;
+    --radius:12px; --radius-sm:8px;
+    --font:'Cairo','Segoe UI',Tahoma,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;justify-content:center;-webkit-font-smoothing:antialiased;}
+  button,input{font-family:inherit;}
+  #app{width:100%;max-width:480px;background:var(--bg);min-height:100vh;position:relative;display:flex;flex-direction:column;}
+
+  /* رأس الصفحة */
+  .app-header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;position:sticky;top:0;z-index:20;}
+  .app-header h1{font-size:1.1rem;font-weight:700;}
+  .app-header .subtitle{font-size:0.7rem;opacity:0.85;margin-top:2px;}
+  .logout-btn{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);padding:6px 12px;border-radius:var(--radius-sm);font-size:0.78rem;cursor:pointer;white-space:nowrap;}
+
+  .main-content{flex:1;padding:16px;padding-bottom:96px;overflow-y:auto;}
+
+  /* شريط التنقل السفلي */
+  .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:20;padding-bottom:env(safe-area-inset-bottom,0);box-shadow:0 -2px 10px rgba(0,0,0,.04);}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 2px 7px;color:var(--text-muted);cursor:pointer;font-size:0.66rem;border-top:2px solid transparent;background:none;border-left:none;border-right:none;border-bottom:none;}
+  .nav-item.active{color:var(--primary);border-top-color:var(--primary);font-weight:600;}
+  .nav-item svg{width:21px;height:21px;}
+
+  h2.section-title{font-size:1.05rem;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  h2.section-title .count{font-size:0.72rem;font-weight:600;color:var(--text-muted);background:var(--primary-light);color:var(--primary);padding:2px 9px;border-radius:20px;}
+  h3.sub-title{font-size:0.9rem;font-weight:700;margin:18px 0 10px;color:var(--text);}
+  h3.sub-title:first-child{margin-top:0;}
+
+  /* عناصر عامة */
+  .card{background:var(--surface);border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .btn{background:var(--primary);color:#fff;border:none;padding:11px 18px;border-radius:var(--radius-sm);cursor:pointer;font-size:0.9rem;font-weight:600;font-family:inherit;transition:background .15s,transform .1s;}
+  .btn:active{transform:scale(.98);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn:not(:disabled):hover{background:var(--primary-dark);}
+  .btn-block{width:100%;}
+  .btn-outline{background:transparent;color:var(--primary);border:1.5px solid var(--primary);padding:9px 16px;border-radius:var(--radius-sm);cursor:pointer;font-size:0.85rem;font-weight:600;font-family:inherit;}
+  .btn-outline:disabled{opacity:.45;cursor:not-allowed;}
+  .btn-danger{background:transparent;color:var(--danger);border:1.5px solid var(--danger);padding:9px 16px;border-radius:var(--radius-sm);cursor:pointer;font-size:0.85rem;font-weight:600;font-family:inherit;}
+  .btn-danger-solid{background:var(--danger);color:#fff;border:none;padding:11px 18px;border-radius:var(--radius-sm);cursor:pointer;font-size:0.9rem;font-weight:600;font-family:inherit;}
+  .btn-success{background:var(--success);color:#fff;border:none;padding:11px 18px;border-radius:var(--radius-sm);cursor:pointer;font-size:0.9rem;font-weight:600;font-family:inherit;}
+  .btn-sm{padding:6px 12px;font-size:0.76rem;border-radius:7px;}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .input{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.92rem;margin-bottom:10px;font-family:inherit;background:var(--surface);color:var(--text);}
+  .input:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary);}
+  label.field-label{display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;font-weight:600;}
+  .error-text{color:var(--danger);font-size:0.8rem;margin:-4px 0 10px;display:none;}
+  .hint-text{color:var(--text-muted);font-size:0.78rem;margin:-4px 0 10px;line-height:1.5;}
+
+  .search-wrap{position:relative;margin-bottom:12px;}
+  .search-wrap svg{position:absolute;top:50%;transform:translateY(-50%);right:12px;color:var(--text-muted);width:18px;height:18px;pointer-events:none;}
+  .search-wrap .input{padding-right:38px;margin-bottom:0;}
+
+  .list-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px;background:var(--surface);border-radius:var(--radius);margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05);cursor:pointer;}
+  .list-item .name{font-weight:700;font-size:0.92rem;}
+  .list-item .shop{color:var(--text-muted);font-size:0.76rem;margin-top:2px;}
+  .list-item .actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+  .list-item .total-badge{font-size:0.72rem;font-weight:700;color:var(--success);background:var(--success-light);padding:3px 9px;border-radius:20px;white-space:nowrap;margin-top:4px;display:inline-block;}
+
+  .badge{background:var(--primary-light);color:var(--primary);padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;white-space:nowrap;}
+  .empty{text-align:center;color:var(--text-muted);padding:34px 16px;font-size:0.88rem;line-height:1.7;}
+
+  .stat-row{display:flex;gap:8px;margin-bottom:14px;}
+  .stat-box{flex:1;background:var(--surface);border-radius:var(--radius);padding:12px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .stat-box .stat-label{font-size:0.7rem;color:var(--text-muted);margin-bottom:5px;}
+  .stat-box .stat-value{font-size:0.98rem;font-weight:700;color:var(--primary);}
+
+  .total-box{background:var(--success-light);color:var(--success);padding:13px;border-radius:var(--radius);text-align:center;font-weight:700;margin-top:6px;font-size:0.95rem;}
+
+  .selected-tenant-card{background:var(--primary-light);border-radius:var(--radius);padding:13px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .selected-tenant-card .name{font-weight:700;color:var(--primary-dark);}
+  .selected-tenant-card .shop{font-size:0.78rem;color:var(--text-muted);margin-top:2px;}
+
+  .modal{position:fixed;inset:0;background:rgba(15,20,30,.55);display:flex;justify-content:center;align-items:flex-end;z-index:100;}
+  .modal-content{background:var(--surface);border-radius:18px 18px 0 0;padding:20px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;animation:slideUp .18s ease-out;}
+  @media(min-width:520px){.modal{align-items:center;}.modal-content{border-radius:18px;max-width:420px;}}
+  @keyframes slideUp{from{transform:translateY(24px);opacity:.4;}to{transform:translateY(0);opacity:1;}}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .modal-header h3{font-size:1.02rem;font-weight:700;}
+  .modal-close{background:none;border:none;font-size:1.4rem;line-height:1;color:var(--text-muted);cursor:pointer;padding:4px 8px;}
+  .modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+
+  .receipt-preview{background:var(--bg);border:1.5px dashed var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;font-size:0.86rem;line-height:2;}
+  .receipt-preview .r-row{display:flex;justify-content:space-between;}
+  .receipt-preview .r-row span:first-child{color:var(--text-muted);}
+  .receipt-preview .r-row span:last-child{font-weight:700;}
+
+  .login-screen{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;padding:24px;width:100%;}
+  .login-box{width:100%;max-width:360px;background:var(--surface);padding:32px 22px;border-radius:20px;box-shadow:0 8px 30px rgba(20,40,80,.12);}
+  .login-logo{width:60px;height:60px;background:var(--primary);border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.3rem;margin:0 auto 16px;}
+  .login-box h2{text-align:center;margin-bottom:6px;color:var(--text);font-size:1.15rem;}
+  .login-box .login-sub{text-align:center;margin-bottom:22px;color:var(--text-muted);font-size:0.85rem;}
+  .login-note{margin-top:18px;font-size:0.76rem;color:var(--text-muted);text-align:center;line-height:1.6;}
+
+  .role-tag{font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--primary-light);color:var(--primary);}
+  .settings-row{display:flex;justify-content:space-between;align-items:center;background:var(--bg);padding:10px 12px;border-radius:var(--radius-sm);margin-bottom:8px;font-size:0.85rem;}
+  .divider{height:1px;background:var(--border);margin:20px 0;border:none;}
+  .danger-zone{border:1.5px solid var(--danger-light);background:var(--danger-light);border-radius:var(--radius);padding:14px;}
+  .danger-zone p{font-size:0.8rem;color:#8a2c22;margin-bottom:12px;line-height:1.6;}
+
+  .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%) translateY(10px);background:rgba(25,28,36,.94);color:#fff;padding:10px 18px;border-radius:24px;font-size:0.82rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:300;max-width:88%;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .mini-history{margin-top:10px;}
+  .mini-history .mh-row{display:flex;justify-content:space-between;font-size:0.78rem;padding:6px 0;border-bottom:1px solid var(--border);color:var(--text-muted);}
+  .mini-history .mh-row span:last-child{color:var(--text);font-weight:600;}
+
+  a{color:inherit;}
+  ::selection{background:var(--primary-light);}
+
+  /* لمسات بصرية إضافية */
+  body{background:radial-gradient(circle at 50% -10%, #eaf1fb 0%, var(--bg) 45%);}
+  .nav-item.active{background:var(--primary-light);}
+  .stat-box{border-right:3px solid var(--primary);}
+  .stat-box:nth-child(2){border-right-color:var(--success);}
+  .stat-box:nth-child(3){border-right-color:var(--text-muted);}
+
+  .header-actions{display:flex;gap:6px;}
+
+  .btn-xs{padding:4px 9px;font-size:0.68rem;border-radius:6px;background:transparent;cursor:pointer;font-family:inherit;font-weight:600;}
+  .mh-row-full{border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px;}
+  .mh-row-full:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .mh-actions{display:flex;gap:6px;margin-top:5px;justify-content:flex-end;}
+
+  .audit-row{background:var(--bg);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;font-size:0.78rem;}
+  .audit-top{display:flex;justify-content:space-between;gap:8px;font-weight:700;margin-bottom:3px;}
+  .audit-mid{color:var(--text);margin-bottom:3px;}
+  .audit-bottom{color:var(--text-muted);}
+
+  select.input{cursor:pointer;}
+
+  .print-only{display:none;}
+  @media print{
+    body{background:#fff;}
+    body *{visibility:hidden;}
+    #report-print-area, #report-print-area *{visibility:visible;}
+    #report-print-area{position:absolute;top:0;left:0;right:0;padding:12px;}
+    .print-only{display:block !important;margin-bottom:14px;}
+    .print-only h2{font-size:1.15rem;margin-bottom:6px;}
+    .print-only div{font-size:0.85rem;color:#333;margin-bottom:2px;}
+    .list-item{box-shadow:none;border:1px solid #ddd;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<input type="file" id="restore-file-input" accept="application/json,.json" style="display:none">
+<input type="file" id="import-json-input" accept="application/json,.json" style="display:none">
+
+<script>
+(function(){
+'use strict';
+
+/* ======================================================================
+   الثوابت والبيانات الأساسية
+   ====================================================================== */
+var KEYS = {
+  tenants: 'souq48_tenants_v1',
+  records: 'souq48_records_v1',
+  mgmt: 'souq48_mgmt_v1',
+  adminName: 'souq48_admin_name_v1',     // (قديم — يُقرأ فقط عند الترحيل التلقائي لأول مرة بعد التحديث)
+  collectors: 'souq48_collectors_v1',    // (قديم — يُقرأ فقط عند الترحيل التلقائي لأول مرة بعد التحديث)
+  session: 'souq48_session_v1',
+  users: 'souq48_users_v2',
+  auditLog: 'souq48_audit_v1'
+};
+
+var MARKET_NAME = 'سوق 48';
+var MARKET_ADDRESS = 'أمام مستشفى 48';
+var ADMIN_PHONE = '777162770';           // رقم الحساب الأساسي الثابت (لا يمكن حذفه، لضمان عدم فقدان الدخول للتطبيق نهائياً)
+var DEFAULT_ADMIN_NAME = 'مشرف السوق';
+var DEFAULT_MGMT_NUMBER = '967777162770'; // الرقم الذي تصله كل الإشعارات، قابل للتعديل من الإعدادات
+var TEMP_MIGRATION_PASSWORD = '1234';     // كلمة مرور مؤقتة تُمنح فقط للحسابات القديمة (من قبل هذا التحديث) تلقائياً، يجب تغييرها
+
+// بيانات المستأجرين الأولية (تُستخدم فقط أول مرة يفتح فيها التطبيق قبل وجود أي بيانات محفوظة)
+var INITIAL_TENANTS = [
+  {"shop":"أ-1","name":"حكيم وهشام سعدان","phone":"967774660644","rent":0},
+  {"shop":"أ-2","name":"عميد الخربي","phone":"967784481024","rent":0},
+  {"shop":"أ-3","name":"عبدالرحمن الانسي","phone":"967771708574","rent":0},
+  {"shop":"أ-4","name":"أسامه السرحي","phone":"967770190025","rent":0},
+  {"shop":"أ-5","name":"أحمد البهلولي","phone":"967776517331","rent":0},
+  {"shop":"أ-6","name":"أبو أحمد الانسي","phone":"967770934915","rent":0},
+  {"shop":"أ-7","name":"أحمد الحيي","phone":"967776340999","rent":0},
+  {"shop":"أ-8","name":"محمد ناصر","phone":"967778830071","rent":0},
+  {"shop":"أ-9","name":"أحمد الهدادي","phone":"967771045591","rent":0},
+  {"shop":"أ-10","name":"ناجي عسكر","phone":"967771230611","rent":0},
+  {"shop":"ب-1","name":"شداد سعدان","phone":"967774660644","rent":0},
+  {"shop":"ب-2","name":"نصر البيحاني","phone":"967775926800","rent":0},
+  {"shop":"ب-3","name":"غمدان العماري","phone":"967784030792","rent":0},
+  {"shop":"ب-4","name":"محمد القاضي","phone":"967773506529","rent":0},
+  {"shop":"ب-5","name":"محمد الغباري","phone":"967771887884","rent":0},
+  {"shop":"ب-6","name":"عصام عامري","phone":"967775939788","rent":0},
+  {"shop":"ب-7","name":"محمد القحم","phone":"967777404485","rent":0},
+  {"shop":"ب-8","name":"نوح الخالدي","phone":"967777511238","rent":0},
+  {"shop":"ب-9","name":"صالح التركي","phone":"967774465312","rent":0},
+  {"shop":"ب-10","name":"محمد فؤاد","phone":"967774325310","rent":0},
+  {"shop":"ج-1","name":"مجاهد","phone":"","rent":0},
+  {"shop":"ج-2","name":"عبدالرحمن الحطور","phone":"967774455014","rent":0},
+  {"shop":"ج-3","name":"هيلان على صالح","phone":"","rent":0},
+  {"shop":"ج-4","name":"سليمان اليمني","phone":"967774429147","rent":0},
+  {"shop":"ج-5","name":"صالح هويدة","phone":"967772056170","rent":0},
+  {"shop":"ج-6","name":"صالح الحطور","phone":"967776423183","rent":0},
+  {"shop":"ج-7","name":"أحمد الحيي","phone":"967776340999","rent":0},
+  {"shop":"ج-8","name":"سميع الاسدي","phone":"967773712416","rent":0},
+  {"shop":"ج-9","name":"العجي","phone":"","rent":0},
+  {"shop":"ج-10","name":"فارس","phone":"967774124466","rent":0},
+  {"shop":"ج-11","name":"عبدالله الضياني","phone":"967775575279","rent":0},
+  {"shop":"ج-12","name":"علي الحمزي","phone":"","rent":0},
+  {"shop":"د-1","name":"ناصر العميسي","phone":"967774497135","rent":0},
+  {"shop":"د-2","name":"علي المقري","phone":"967775628942","rent":0},
+  {"shop":"د-3","name":"عبدالحكيم الصبري","phone":"967776599658","rent":0},
+  {"shop":"د-4","name":"حمير السلامي","phone":"967770822684","rent":0},
+  {"shop":"د-5","name":"سام العيني","phone":"967715143210","rent":0},
+  {"shop":"د-6","name":"رياض الشرعبي","phone":"967772268569","rent":0},
+  {"shop":"د-7","name":"زيد الهدادي","phone":"967772191542","rent":0},
+  {"shop":"د-8","name":"عبدالرحمن الكبسي","phone":"967773542328","rent":0},
+  {"shop":"د-9","name":"أكرم اليعيشي","phone":"967774820571","rent":0},
+  {"shop":"د-10","name":"صالح الحطور","phone":"967776423183","rent":0},
+  {"shop":"د-11","name":"صالح التركي","phone":"","rent":0},
+  {"shop":"د-12","name":"محمد التركي","phone":"967770425358","rent":0},
+  {"shop":"1","name":"ناصر الحطور","phone":"967772418218","rent":0},
+  {"shop":"2","name":"علوش الانسي","phone":"967777626248","rent":0},
+  {"shop":"3","name":"حميد سلامة","phone":"967773971714","rent":0},
+  {"shop":"4","name":"محمد الخليفي","phone":"967773234380","rent":0},
+  {"shop":"5","name":"مراد العليبي","phone":"967773977554","rent":0},
+  {"shop":"6","name":"على احمد الخليفي","phone":"967770829309","rent":0},
+  {"shop":"7","name":"محمد الغباري","phone":"967772920223","rent":0},
+  {"shop":"8","name":"بشار القادري","phone":"967773383355","rent":0},
+  {"shop":"9","name":"فارس الجحافي","phone":"967783602576","rent":0},
+  {"shop":"10","name":"مصطفى الهجري","phone":"967770856429","rent":0},
+  {"shop":"11","name":"نوح الخالدي","phone":"967777511238","rent":0},
+  {"shop":"12","name":"عادل احمد العواضي","phone":"967777498152","rent":0},
+  {"shop":"13","name":"عبدالرحمن الصباحي (مغسلة) رقم(2)","phone":"967772973573","rent":0},
+  {"shop":"14","name":"على حداد","phone":"967772478179","rent":0},
+  {"shop":"15","name":"على حداد","phone":"967772478179","rent":0},
+  {"shop":"16","name":"صفوان الشيخ","phone":"967772067059","rent":0},
+  {"shop":"17","name":"محمد نعمان","phone":"967775865236","rent":0},
+  {"shop":"18","name":"قصي الواحدي","phone":"967777479675","rent":0},
+  {"shop":"19","name":"أيوب الجبلي","phone":"967777645127","rent":0},
+  {"shop":"20","name":"صاحب الشمة","phone":"967783705783","rent":0},
+  {"shop":"21","name":"البوفيه / أنور المغني","phone":"967777711831","rent":0},
+  {"shop":"22","name":"أبو سياف","phone":"967778558665","rent":0},
+  {"shop":"23","name":"مبروك أحمد المسوري","phone":"967780249391","rent":0},
+  {"shop":"24","name":"زيد الهدادي","phone":"967772191542","rent":0},
+  {"shop":"25","name":"علي محسن الخالدي","phone":"967777261750","rent":0},
+  {"shop":"26","name":"بسام الفايق","phone":"967777302414","rent":0},
+  {"shop":"27","name":"وائل فاضل","phone":"967775740540","rent":0},
+  {"shop":"28","name":"ممدوح حسن","phone":"967776457124","rent":0},
+  {"shop":"29","name":"صدام القملي","phone":"967777736424","rent":0},
+  {"shop":"30","name":"عبدالولي عنقاد","phone":"967780428423","rent":0},
+  {"shop":"31","name":"يوسف الشعور","phone":"967781088917","rent":0}
+];
+
+/* ======================================================================
+   دوال مساعدة عامة (Utilities)
+   ====================================================================== */
+
+// إزالة كل شيء غير رقمي، وإسقاط بادئة 967 الدولية للمقارنة المحلية
+function normalizePhone(phone){
+  var p = String(phone || '').replace(/[^\d]/g, '');
+  if (p.indexOf('967') === 0) p = p.substring(3);
+  return p;
+}
+// تحويل رقم محلي إلى الصيغة الدولية اللازمة لروابط واتساب
+function toInternational(phone){
+  var p = String(phone || '').replace(/[^\d]/g, '');
+  if (p.indexOf('967') === 0) return p;
+  return '967' + p;
+}
+function generateId(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+// تهريب أي نص قبل إدراجه داخل HTML، لمنع أي تعارض مع الوسوم إذا احتوى اسم على رمز خاص
+function escapeHtml(str){
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+// تنسيق المبلغ بأرقام واضحة مع فواصل الآلاف + كلمة "ريال"
+function formatMoney(n){
+  var num = Number(n) || 0;
+  try { return num.toLocaleString('en-US') + ' ريال'; }
+  catch(e){ return num + ' ريال'; }
+}
+function formatDateTime(iso){
+  try { return new Date(iso).toLocaleString('ar-u-nu-latn', { dateStyle:'medium', timeStyle:'short' }); }
+  catch(e){ try { return new Date(iso).toLocaleString('ar-YE'); } catch(e2){ return new Date(iso).toString(); } }
+}
+function formatDate(iso){
+  try { return new Date(iso).toLocaleDateString('ar-u-nu-latn', { dateStyle:'medium' }); }
+  catch(e){ return new Date(iso).toDateString(); }
+}
+function formatTime(iso){
+  try { return new Date(iso).toLocaleTimeString('ar-u-nu-latn', { timeStyle:'short' }); }
+  catch(e){ try { return new Date(iso).toLocaleTimeString('ar-YE'); } catch(e2){ return new Date(iso).toLocaleTimeString(); } }
+}
+
+/* تخزين محلي آمن (مع معالجة أي خطأ محتمل بدل تعطل التطبيق بالكامل) */
+function loadJSON(key, fallback){
+  try {
+    var v = localStorage.getItem(key);
+    return v !== null ? JSON.parse(v) : fallback;
+  } catch(e){ return fallback; }
+}
+function saveJSON(key, value){
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+  catch(e){ console.error('تعذّر الحفظ محلياً:', e); return false; }
+}
+
+/* ======================================================================
+   الحالة العامة للتطبيق (State)
+   ====================================================================== */
+// ترحيل تلقائي لمرة واحدة: من نظام "مشرف واحد ثابت + قائمة محصّلين بلا كلمة مرور"
+// إلى نظام موحّد "قائمة مستخدمين، لكل واحد رقم هاتف + اسم + كلمة مرور + صلاحية"
+function migrateUsers(){
+  var oldAdminName = loadJSON(KEYS.adminName, DEFAULT_ADMIN_NAME);
+  var oldCollectors = loadJSON(KEYS.collectors, [{ phone: '772777009', name: 'محمد الجعدبي' }]);
+  var users = [{
+    id: 'root-admin',
+    phone: normalizePhone(ADMIN_PHONE),
+    name: oldAdminName || DEFAULT_ADMIN_NAME,
+    password: TEMP_MIGRATION_PASSWORD,
+    role: 'admin',
+    protected: true
+  }];
+  oldCollectors.forEach(function(c){
+    users.push({
+      id: generateId(),
+      phone: normalizePhone(c.phone),
+      name: c.name || '',
+      password: TEMP_MIGRATION_PASSWORD,
+      role: 'collector',
+      protected: false
+    });
+  });
+  return users;
+}
+function pad2(n){ return n < 10 ? '0' + n : '' + n; }
+function todayISO(){
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+}
+function firstDayOfMonthISO(){
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-01';
+}
+
+var storedTenants = loadJSON(KEYS.tenants, null);
+var storedUsers = loadJSON(KEYS.users, null);
+var state = {
+  session: loadJSON(KEYS.session, null),
+  tenants: storedTenants !== null ? storedTenants : INITIAL_TENANTS.map(function(t){ return Object.assign({ id: generateId() }, t); }),
+  records: loadJSON(KEYS.records, []),
+  mgmtNumber: loadJSON(KEYS.mgmt, DEFAULT_MGMT_NUMBER),
+  users: storedUsers !== null ? storedUsers : migrateUsers(),
+  auditLog: loadJSON(KEYS.auditLog, []),
+
+  activeTab: 'collect',
+  tenantSearch: '',
+  collectSearch: '',
+  selectedTenantId: null,
+  reportRange: { from: firstDayOfMonthISO(), to: todayISO() },
+  reportSearch: '',
+
+  editingTenant: null,     // null | {} إضافة | {...tenant} تعديل | {...tenant,_replaceMode:true} استبدال
+  showImportModal: false,
+  receiptRecord: null,     // آخر سند تم حفظه، يتحكم بظهور نافذة الإرسال
+  historyTenant: null,     // مستأجر يتم عرض سجل تحصيلاته
+  eraseModal: false,
+  editingUser: null,       // null | {} إضافة | {...user} تعديل
+  editingRecord: null,     // null | {record, mode:'edit'|'delete'}
+  changePasswordOpen: false
+};
+if (storedTenants === null) saveJSON(KEYS.tenants, state.tenants);
+if (storedUsers === null) saveJSON(KEYS.users, state.users);
+// إعادة مزامنة الجلسة الحالية (إن وجدت) مع بيانات المستخدم الفعلية بعد أي تحديث أو تعديل صلاحية
+if (state.session){
+  var _freshUser = null;
+  for (var _i=0; _i<state.users.length; _i++){
+    if (normalizePhone(state.users[_i].phone) === normalizePhone(state.session.phone)) { _freshUser = state.users[_i]; break; }
+  }
+  if (_freshUser){
+    state.session = { phone: _freshUser.phone, name: _freshUser.name, role: _freshUser.role };
+    saveJSON(KEYS.session, state.session);
+  } else {
+    state.session = null;
+    localStorage.removeItem(KEYS.session);
+  }
+}
+
+/* ======================================================================
+   دوال منطقية (بيانات ومستخدمين)
+   ====================================================================== */
+function findTenant(id){
+  for (var i=0;i<state.tenants.length;i++){ if (state.tenants[i].id === id) return state.tenants[i]; }
+  return null;
+}
+function findUserByPhone(normalizedPhone){
+  if (!normalizedPhone) return null;
+  for (var i=0;i<state.users.length;i++){
+    if (normalizePhone(state.users[i].phone) === normalizedPhone) return state.users[i];
+  }
+  return null;
+}
+function findUserById(id){
+  for (var i=0;i<state.users.length;i++){ if (state.users[i].id === id) return state.users[i]; }
+  return null;
+}
+function refreshSessionFromUsers(){
+  if (!state.session) return;
+  var u = findUserByPhone(state.session.phone);
+  if (u){ state.session = { phone: u.phone, name: u.name, role: u.role }; saveJSON(KEYS.session, state.session); }
+}
+function isAdmin(){ return !!(state.session && state.session.role === 'admin'); }
+function findRecordById(id){
+  for (var i=0;i<state.records.length;i++){ if (state.records[i].id === id) return state.records[i]; }
+  return null;
+}
+function getTenantMonthRecords(tenantId){
+  var now = new Date();
+  return state.records.filter(function(r){
+    if (r.tenantId !== tenantId) return false;
+    var d = new Date(r.date);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+}
+function getUnpaidTenantsThisMonth(){
+  return state.tenants.filter(function(t){ return getTenantMonthRecords(t.id).length === 0; });
+}
+function getRecordsInRange(fromISO, toISO){
+  var from = new Date(fromISO + 'T00:00:00');
+  var to = new Date(toISO + 'T23:59:59');
+  return state.records.filter(function(r){
+    var d = new Date(r.date);
+    return d >= from && d <= to;
+  }).sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
+}
+
+function getFilteredTenants(query){
+  var q = (query || '').trim().toLowerCase();
+  if (!q) return state.tenants;
+  return state.tenants.filter(function(t){
+    return (t.name||'').toLowerCase().indexOf(q) !== -1 ||
+           (t.shop||'').toLowerCase().indexOf(q) !== -1 ||
+           (t.phone||'').indexOf(q) !== -1;
+  });
+}
+function getTenantRecords(tenantId){
+  return state.records
+    .filter(function(r){ return r.tenantId === tenantId; })
+    .sort(function(a,b){ return new Date(b.date) - new Date(a.date); });
+}
+function getTenantTotal(tenantId){
+  return getTenantRecords(tenantId).reduce(function(s,r){ return s + (Number(r.amount)||0); }, 0);
+}
+function sumAmounts(records){ return records.reduce(function(s,r){ return s + (Number(r.amount)||0); }, 0); }
+function getTodayRecords(){
+  var today = new Date().toDateString();
+  return state.records.filter(function(r){ return new Date(r.date).toDateString() === today; });
+}
+function getMonthRecords(){
+  var now = new Date();
+  return state.records.filter(function(r){
+    var d = new Date(r.date);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+}
+
+/* ======================================================================
+   أيقونات SVG بسيطة (بدون أي مكتبة خارجية)
+   ====================================================================== */
+var ICONS = {
+  tenants: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="4" cy="6" r="1.4" fill="currentColor" stroke="none"/><line x1="9" y1="6" x2="20" y2="6"/><circle cx="4" cy="12" r="1.4" fill="currentColor" stroke="none"/><line x1="9" y1="12" x2="20" y2="12"/><circle cx="4" cy="18" r="1.4" fill="currentColor" stroke="none"/><line x1="9" y1="18" x2="20" y2="18"/></svg>',
+  collect: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
+  summary: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="13" width="3.2" height="7"/><rect x="10.4" y="9" width="3.2" height="11"/><rect x="14.8" y="5" width="3.2" height="15"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="1.8" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="1.8" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="10" cy="18" r="1.8" fill="currentColor" stroke="none"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="20" y2="20"/></svg>',
+  alerts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="7.5" x2="12" y2="13.5"/><circle cx="12" cy="16.5" r="1.1" fill="currentColor" stroke="none"/></svg>',
+  reports: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="3" width="12" height="18" rx="1.5"/><line x1="8.5" y1="8" x2="15.5" y2="8"/><line x1="8.5" y1="12" x2="15.5" y2="12"/><line x1="8.5" y1="16" x2="13" y2="16"/></svg>'
+};
+
+/* ======================================================================
+   عرض شاشة الدخول
+   ====================================================================== */
+function renderLogin(){
+  return '' +
+  '<div class="login-screen">' +
+    '<div class="login-box">' +
+      '<div class="login-logo">48</div>' +
+      '<h2>' + MARKET_NAME + '</h2>' +
+      '<div class="login-sub">' + escapeHtml(MARKET_ADDRESS) + '</div>' +
+      '<form id="login-form">' +
+        '<label class="field-label">رقم الهاتف</label>' +
+        '<input class="input" type="tel" id="login-phone-input" placeholder="مثال: 7xxxxxxxx" dir="ltr" style="text-align:center" autofocus>' +
+        '<label class="field-label">كلمة المرور</label>' +
+        '<input class="input" type="password" id="login-password-input" placeholder="كلمة المرور" dir="ltr" style="text-align:center">' +
+        '<div class="error-text" id="login-error"></div>' +
+        '<button type="submit" class="btn btn-block">دخول</button>' +
+      '</form>' +
+      '<div class="login-note">الدخول مخصص للمشرف والمستخدمين الذين أضافهم فقط. لأي استفسار تواصل مع إدارة السوق.</div>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ======================================================================
+   الهيكل العام بعد الدخول (رأس + تبويبات + شريط سفلي + نوافذ)
+   ====================================================================== */
+function tabsForRole(){
+  if (isAdmin()) return [
+    { id:'tenants', label:'المستأجرين', icon:ICONS.tenants },
+    { id:'collect', label:'التحصيل', icon:ICONS.collect },
+    { id:'alerts', label:'التنبيهات', icon:ICONS.alerts },
+    { id:'reports', label:'التقارير', icon:ICONS.reports },
+    { id:'summary', label:'الملخص', icon:ICONS.summary },
+    { id:'settings', label:'الإعدادات', icon:ICONS.settings }
+  ];
+  return [
+    { id:'collect', label:'التحصيل', icon:ICONS.collect },
+    { id:'tenants', label:'المستأجرين', icon:ICONS.tenants },
+    { id:'alerts', label:'التنبيهات', icon:ICONS.alerts },
+    { id:'summary', label:'الملخص', icon:ICONS.summary }
+  ];
+}
+
+function renderShell(){
+  var tabs = tabsForRole();
+  if (!tabs.some(function(t){return t.id===state.activeTab;})) state.activeTab = tabs[0].id;
+
+  var body = '';
+  if (state.activeTab === 'tenants') body = renderTenantsTab();
+  else if (state.activeTab === 'collect') body = renderCollectTab();
+  else if (state.activeTab === 'alerts') body = renderAlertsTab();
+  else if (state.activeTab === 'reports' && isAdmin()) body = renderReportsTab();
+  else if (state.activeTab === 'summary') body = renderSummaryTab();
+  else if (state.activeTab === 'settings' && isAdmin()) body = renderSettingsTab();
+
+  var nav = '<div class="bottom-nav">' + tabs.map(function(t){
+    return '<button class="nav-item' + (state.activeTab===t.id?' active':'') + '" data-action="switch-tab" data-tab="' + t.id + '">' + t.icon + '<span>' + t.label + '</span></button>';
+  }).join('') + '</div>';
+
+  var header = '' +
+  '<div class="app-header">' +
+    '<div>' +
+      '<h1>' + MARKET_NAME + '</h1>' +
+      '<div class="subtitle">' + escapeHtml(state.session.name) + ' · <span class="role-tag" style="background:rgba(255,255,255,.18);color:#fff;">' + (state.session.role==='admin'?'مشرف':'محصّل') + '</span></div>' +
+    '</div>' +
+    '<div class="header-actions">' +
+      '<button class="logout-btn" data-action="open-change-password" title="تغيير كلمة المرور">🔑</button>' +
+      '<button class="logout-btn" data-action="logout">خروج</button>' +
+    '</div>' +
+  '</div>';
+
+  var modals = '';
+  if (state.editingTenant !== null) modals += renderTenantModal();
+  if (state.showImportModal) modals += renderImportModal();
+  if (state.receiptRecord) modals += renderReceiptModal();
+  if (state.historyTenant) modals += renderHistoryModal();
+  if (state.eraseModal) modals += renderEraseModal();
+  if (state.editingUser !== null) modals += renderUserModal();
+  if (state.editingRecord !== null) modals += renderRecordEditModal();
+  if (state.changePasswordOpen) modals += renderChangePasswordModal();
+
+  return header + '<div class="main-content" id="main-content">' + body + '</div>' + nav + modals;
+}
+
+function render(){
+  var root = document.getElementById('app');
+  if (!state.session){ root.innerHTML = renderLogin(); return; }
+  root.innerHTML = renderShell();
+}
+
+/* ======================================================================
+   تبويب المستأجرين
+   ====================================================================== */
+function renderTenantsTab(){
+  var admin = isAdmin();
+  var html = '';
+  html += '<h2 class="section-title">المستأجرين <span class="count">' + state.tenants.length + '</span></h2>';
+  if (admin){
+    html += '<div class="btn-row" style="margin-bottom:12px;">' +
+      '<button class="btn btn-sm" data-action="open-add-tenant" style="flex:1">+ مستأجر جديد</button>' +
+      '<button class="btn-outline btn-sm" data-action="open-import" style="flex:1">استيراد ملف JSON</button>' +
+    '</div>';
+  }
+  html += '<div class="search-wrap">' + ICONS.search + '<input class="input" id="tenant-search-input" placeholder="ابحث بالاسم أو رقم المحل أو الهاتف" value="' + escapeHtml(state.tenantSearch) + '"></div>';
+  html += '<div id="tenant-list-items">' + renderTenantListItems(getFilteredTenants(state.tenantSearch)) + '</div>';
+  return html;
+}
+
+function renderTenantListItems(list){
+  if (!list.length) return '<div class="empty">لا يوجد مستأجرون مطابقون لبحثك.</div>';
+  var admin = isAdmin();
+  return list.map(function(t){
+    var total = getTenantTotal(t.id);
+    var actions = '';
+    if (admin){
+      actions = '<div class="actions">' +
+        '<button class="btn-outline btn-sm" data-action="open-edit-tenant" data-id="' + t.id + '">تعديل</button>' +
+        '<button class="btn-outline btn-sm" data-action="open-replace-tenant" data-id="' + t.id + '">استبدال</button>' +
+        '<button class="btn-danger btn-sm" data-action="delete-tenant" data-id="' + t.id + '">حذف</button>' +
+      '</div>';
+    }
+    return '' +
+    '<div class="list-item" data-action="open-history" data-id="' + t.id + '">' +
+      '<div>' +
+        '<div class="name">' + escapeHtml(t.name || '(بدون اسم)') + '</div>' +
+        '<div class="shop">محل: ' + escapeHtml(t.shop) + ' · هاتف: ' + (t.phone ? escapeHtml(t.phone) : 'لا يوجد') + '</div>' +
+        (total > 0 ? '<span class="total-badge">إجمالي التحصيل: ' + formatMoney(total) + '</span>' : '') +
+      '</div>' +
+      (admin ? actions : '') +
+    '</div>';
+  }).join('');
+}
+
+/* نافذة إضافة / تعديل / استبدال مستأجر */
+function renderTenantModal(){
+  var et = state.editingTenant;
+  var isReplace = !!et._replaceMode;
+  var isEdit = !!et.id && !isReplace;
+  var isNew = !et.id;
+  var title = isReplace ? 'استبدال المستأجر' : (isEdit ? 'تعديل بيانات المستأجر' : 'مستأجر جديد');
+
+  var shopField;
+  if (isNew){
+    shopField = '<label class="field-label">رقم المحل</label><input class="input" id="tenant-shop-input" placeholder="مثال: 32 أو هـ-1" value="">';
+  } else if (isReplace){
+    shopField = '<label class="field-label">رقم المحل</label><input class="input" id="tenant-shop-input" value="' + escapeHtml(et.shop) + '" readonly style="background:var(--bg);color:var(--text-muted)">';
+  } else {
+    shopField = '<label class="field-label">رقم المحل</label><input class="input" id="tenant-shop-input" value="' + escapeHtml(et.shop) + '">';
+  }
+
+  var hint = isReplace ? '<div class="hint-text">سيتم استبدال «' + escapeHtml(et._previousName||'') + '» بمستأجر جديد لنفس المحل. سجلات التحصيل السابقة ستبقى محفوظة باسم المستأجر السابق كما هي.</div>' : '';
+
+  return '' +
+  '<div class="modal">' +
+    '<div class="modal-content">' +
+      '<div class="modal-header"><h3>' + title + '</h3><button class="modal-close" data-action="close-tenant-modal">×</button></div>' +
+      hint +
+      '<label class="field-label">الاسم</label>' +
+      '<input class="input" id="tenant-name-input" placeholder="اسم المستأجر" value="' + (isReplace ? '' : escapeHtml(et.name||'')) + '">' +
+      '<label class="field-label">رقم الهاتف (اختياري)</label>' +
+      '<input class="input" id="tenant-phone-input" placeholder="967xxxxxxxxx" dir="ltr" value="' + (isReplace ? '' : escapeHtml(et.phone||'')) + '">' +
+      shopField +
+      '<label class="field-label">الإيجار الشهري (اختياري)</label>' +
+      '<input class="input" type="number" inputmode="decimal" id="tenant-rent-input" placeholder="0" value="' + (isReplace ? '' : (et.rent||'')) + '">' +
+      '<div class="hint-text">إن حُدِّد، سيُستخدم لاحقاً في شاشة التنبيهات لمعرفة نسبة السداد. إن تُرك فارغاً، تعتمد شاشة التنبيهات فقط على وجود تحصيل مسجّل هذا الشهر أم لا.</div>' +
+      '<div class="error-text" id="tenant-modal-error"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn-outline" data-action="close-tenant-modal">إلغاء</button>' +
+        '<button class="btn" data-action="save-tenant">حفظ</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function renderImportModal(){
+  return '' +
+  '<div class="modal">' +
+    '<div class="modal-content">' +
+      '<div class="modal-header"><h3>استيراد مستأجرين من JSON</h3><button class="modal-close" data-action="close-import">×</button></div>' +
+      '<div class="hint-text">الملف يجب أن يكون قائمة JSON تحتوي على الحقول shop و name و phone. المستأجر الذي يطابق رقم محل موجود مسبقاً سيتم تحديث بياناته، وأي رقم محل جديد سيُضاف كمستأجر جديد.</div>' +
+      '<button class="btn btn-block" data-action="trigger-import-file">اختر ملف JSON</button>' +
+      '<div class="modal-actions"><button class="btn-outline" data-action="close-import">إغلاق</button></div>' +
+    '</div>' +
+  '</div>';
+}
+
+/* نافذة سجل تحصيلات مستأجر معيّن */
+function renderHistoryModal(){
+  var t = state.historyTenant;
+  var records = getTenantRecords(t.id);
+  var total = sumAmounts(records);
+  var admin = isAdmin();
+  var rowsHtml = records.length ?
+    records.map(function(r){
+      var actions = admin ?
+        '<div class="mh-actions">' +
+          '<button class="btn-outline btn-xs" data-action="open-edit-record" data-id="' + r.id + '">تعديل</button>' +
+          '<button class="btn-danger btn-xs" data-action="open-delete-record" data-id="' + r.id + '">حذف</button>' +
+        '</div>' : '';
+      return '<div class="mh-row-full">' +
+        '<div class="mh-row"><span>' + formatDateTime(r.date) + ' · ' + escapeHtml(r.collectorName||'') + '</span><span>' + formatMoney(r.amount) + '</span></div>' +
+        actions +
+      '</div>';
+    }).join('') :
+    '<div class="empty" style="padding:18px 0;">لا توجد تحصيلات مسجّلة لهذا المستأجر بعد.</div>';
+
+  return '' +
+  '<div class="modal">' +
+    '<div class="modal-content">' +
+      '<div class="modal-header"><h3>سجل تحصيلات: ' + escapeHtml(t.name) + '</h3><button class="modal-close" data-action="close-history">×</button></div>' +
+      '<div class="hint-text" style="margin-bottom:12px;">محل رقم ' + escapeHtml(t.shop) + (t.phone ? ' · ' + escapeHtml(t.phone) : '') + '</div>' +
+      '<div class="total-box">إجمالي ما تم تحصيله: ' + formatMoney(total) + '</div>' +
+      '<div class="mini-history">' + rowsHtml + '</div>' +
+      '<div class="modal-actions"><button class="btn-outline btn-block" data-action="close-history">إغلاق</button></div>' +
+    '</div>' +
+  '</div>';
+}
+
+/* نافذة تعديل/حذف تحصيل واحد (للمشرف فقط) */
+function toDatetimeLocalValue(iso){
+  var d = new Date(iso);
+  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+}
+function renderRecordEditModal(){
+  var ctx = state.editingRecord;
+  var r = ctx.record;
+  var isDelete = ctx.mode === 'delete';
+  var title = isDelete ? 'حذف يوم تحصيل' : 'تعديل تحصيل';
+  var body = '';
+  if (isDelete){
+    body = '<div class="receipt-preview" style="margin-bottom:14px;">' +
+      '<div class="r-row"><span>المستأجر</span><span>' + escapeHtml(r.tenantName) + '</span></div>' +
+      '<div class="r-row"><span>المبلغ</span><span>' + formatMoney(r.amount) + '</span></div>' +
+      '<div class="r-row"><span>التاريخ</span><span>' + formatDateTime(r.date) + '</span></div>' +
+    '</div>' +
+    '<div class="hint-text">سيتم حذف هذا التحصيل نهائياً من سجل ' + escapeHtml(r.tenantName) + ' ومن كل التقارير والملخصات. لا يمكن التراجع عن هذا الإجراء.</div>';
+  } else {
+    body = '<label class="field-label">المبلغ</label>' +
+    '<input class="input" type="number" inputmode="decimal" id="record-edit-amount" value="' + r.amount + '">' +
+    '<label class="field-label">التاريخ والوقت</label>' +
+    '<input class="input" type="datetime-local" id="record-edit-date" value="' + toDatetimeLocalValue(r.date) + '">';
+  }
+  body += '<label class="field-label">سبب ' + (isDelete?'الحذف':'التعديل') + ' <span style="font-weight:400;color:var(--text-muted)">(مطلوب، لأغراض المراجعة)</span></label>' +
+    '<input class="input" id="record-edit-reason" placeholder="مثال: خطأ في إدخال المبلغ">' +
+    '<div class="error-text" id="record-edit-error"></div>';
+
+  return '' +
+  '<div class="modal">' +
+    '<div class="modal-content">' +
+      '<div class="modal-header"><h3>' + title + '</h3><button class="modal-close" data-action="close-record-edit">×</button></div>' +
+      body +
+      '<div class="modal-actions">' +
+        '<button class="btn-outline" data-action="close-record-edit">إلغاء</button>' +
+        (isDelete ?
+          '<button class="btn-danger-solid" data-action="confirm-delete-record">تأكيد الحذف</button>' :
+          '<button class="btn" data-action="confirm-edit-record">حفظ التعديل</button>') +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ======================================================================
+   تبويب التحصيل
+   ====================================================================== */
+function renderCollectTab(){
+  var html = '<h2 class="section-title">تحصيل إيجار</h2>';
+
+  if (!state.selectedTenantId){
+    html += '<div class="search-wrap">' + ICONS.search + '<input class="input" id="collect-search-input" placeholder="ابحث عن المستأجر بالاسم أو رقم المحل" value="' + escapeHtml(state.collectSearch) + '"></div>';
+    html += '<div id="collect-suggestions">' + renderCollectSuggestions(state.collectSearch) + '</div>';
+  } else {
+    var t = findTenant(state.selectedTenantId);
+    if (!t){ state.selectedTenantId = null; return renderCollectTab(); }
+    html += '<div class="selected-tenant-card">' +
+      '<div><div class="name">' + escapeHtml(t.name) + '</div><div class="shop">محل ' + escapeHtml(t.shop) + (t.phone?' · '+escapeHtml(t.phone):' · بدون رقم هاتف') + '</div></div>' +
+      '<button class="btn-outline btn-sm" data-action="change-selected-tenant">تغيير</button>' +
+    '</div>';
+
+    html += '<label class="field-label">المبلغ المحصّل</label>';
+    html += '<input class="input" type="number" inputmode="decimal" id="collect-amount-input" placeholder="0" min="0">';
+    html += '<div class="error-text" id="collect-error"></div>';
+    html += '<button class="btn btn-block btn-success" data-action="save-collection">حفظ التحصيل</button>';
+
+    var recent = getTenantRecords(t.id).slice(0,3);
+    if (recent.length){
+      html += '<h3 class="sub-title">آخر تحصيلات هذا المستأجر</h3>';
+      html += '<div class="mini-history">' + recent.map(function(r){
+        return '<div class="mh-row"><span>' + formatDate(r.date) + '</span><span>' + formatMoney(r.amount) + '</span></div>';
+      }).join('') + '</div>';
+    }
+  }
+
+  var todayTotal = sumAmounts(getTodayRecords());
+  html += '<div class="total-box">إجمالي تحصيل اليوم: ' + formatMoney(todayTotal) + '</div>';
+  return html;
+}
+
+function renderCollectSuggestions(query){
+  var list = getFilteredTenants(query);
+  if (!query){
+    // بدون بحث: نعرض القائمة كاملة (يمكن التمرير)، مرتبة كما هي
+  }
+  if (!list.length) return '<div class="empty">لا يوجد مستأجرون مطابقون.</div>';
+  return list.map(function(t){
+    return '<div class="list-item" data-action="pick-tenant" data-id="' + t.id + '">' +
+      '<div><div class="name">' + escapeHtml(t.name || '(بدون اسم)') + '</div><div class="shop">محل ' + escapeHtml(t.shop) + '</div></div>' +
+      (t.phone ? '<span class="badge">واتساب متاح</span>' : '') +
+    '</div>';
+  }).join('');
+}
+
+/* نافذة السند بعد الحفظ */
+function renderReceiptModal(){
+  var r = state.receiptRecord;
+  var tenant = findTenant(r.tenantId);
+  var hasPhone = tenant && tenant.phone;
+  return '' +
+  '<div class="modal">' +
+    '<div class="modal-content">' +
+      '<div class="modal-header"><h3>تم حفظ التحصيل</h3><button class="modal-close" data-action="close-receipt">×</button></div>' +
+      '<div class="receipt-preview">' +
+        '<div class="r-row"><span>المستأجر</span><span>' + escapeHtml(r.tenantName) + '</span></div>' +
+        '<div class="r-row"><span>المحل</span><span>' + escapeHtml(r.shop) + '</span></div>' +
+        '<div class="r-row"><span>المبلغ</span><span>' + formatMoney(r.amount) + '</span></div>' +
+        '<div class="r-row"><span>التاريخ</span><span>' + formatDateTime(r.date) + '</span></div>' +
+        '<div class="r-row"><span>المحصّل</span><span>' + escapeHtml(r.collectorName) + '</span></div>' +
+      '</div>' +
+      (hasPhone ?
+        '<button class="btn btn-block" style="margin-bottom:8px;" data-action="send-tenant-whatsapp">إرسال إشعار للمستأجر عبر واتساب</button>' :
+        '<div class="hint-text">لا يوجد رقم هاتف مسجّل لهذا المستأجر، لذلك لن يُرسل له إشعار.</div>') +
+      '<button class="btn btn-block" style="margin-bottom:8px;background:var(--success)" data-action="send-admin-whatsapp">إرسال نسخة إلى الإدارة عبر واتساب</button>' +
+      '<div class="btn-row">' +
+        '<button class="btn-outline" style="flex:1" data-action="copy-receipt">نسخ نص السند</button>' +
+        '<button class="btn-outline" style="flex:1" data-action="download-receipt">تنزيل صورة السند</button>' +
+      '</div>' +
+      '<div class="modal-actions"><button class="btn-outline btn-block" data-action="close-receipt">تم</button></div>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ======================================================================
+   تبويب الملخص
+   ====================================================================== */
+function renderSummaryTab(){
+  var todayRecords = getTodayRecords().sort(function(a,b){ return new Date(b.date)-new Date(a.date); });
+  var monthTotal = sumAmounts(getMonthRecords());
+  var allTimeTotal = sumAmounts(state.records);
+  var todayTotal = sumAmounts(todayRecords);
+
+  var html = '<h2 class="section-title">الملخص</h2>';
+  html += '<div class="stat-row">' +
+    '<div class="stat-box"><div class="stat-label">اليوم</div><div class="stat-value">' + formatMoney(todayTotal) + '</div></div>' +
+    '<div class="stat-box"><div class="stat-label">هذا الشهر</div><div class="stat-value">' + formatMoney(monthTotal) + '</div></div>' +
+    '<div class="stat-box"><div class="stat-label">الإجمالي الكلي</div><div class="stat-value">' + formatMoney(allTimeTotal) + '</div></div>' +
+  '</div>';
+
+  html += '<h3 class="sub-title">تحصيلات اليوم (' + todayRecords.length + ')</h3>';
+  if (!todayRecords.length){
+    html += '<div class="empty">لا توجد تحصيلات مسجّلة اليوم بعد.</div>';
+  } else {
+    html += todayRecords.map(function(r){
+      return '<div class="list-item" style="cursor:default;">' +
+        '<div><div class="name">' + escapeHtml(r.tenantName) + '</div><div class="shop">محل ' + escapeHtml(r.shop) + ' · ' + formatTime(r.date) + ' · ' + escapeHtml(r.collectorName) + '</div></div>' +
+        '<span class="badge">' + formatMoney(r.amount) + '</span>' +
+      '</div>';
+    }).join('');
+  }
+  return html;
+}
+
+/* ======================================================================
+   تبويب التنبيهات (المستأجرون الذين لم يدفعوا هذا الشهر)
+   ====================================================================== */
+function formatMonthLabel(){
+  try { return new Date().toLocaleDateString('ar-u-nu-latn', { month:'long', year:'numeric' }); }
+  catch(e){ return ''; }
+}
+function renderAlertsTab(){
+  var unpaid = getUnpaidTenantsThisMonth();
+  var paidCount = state.tenants.length - unpaid.length;
+  var monthLabel = formatMonthLabel();
+
+  var html = '<h2 class="section-title">التنبيهات</h2>';
+  html += '<div class="stat-row">' +
+    '<div class="stat-box" style="border-right-color:var(--danger)"><div class="stat-label">لم يدفعوا بعد' + (monthLabel?' ('+monthLabel+')':'') + '</div><div class="stat-value" style="color:var(--danger)">' + unpaid.length + '</div></div>' +
+    '<div class="stat-box" style="border-right-color:var(--success)"><div class="stat-label">دفعوا هذا الشهر</div><div class="stat-value" style="color:var(--success)">' + paidCount + '</div></div>' +
+  '</div>';
+  html += '<div class="hint-text">تعتمد هذه القائمة على وجود تحصيل واحد على الأقل مسجّل لكل مستأجر خلال الشهر الحالي (بصرف النظر عن المبلغ). إن حدّدت إيجاراً شهرياً لمستأجر من شاشة المستأجرين، ستُضاف لاحقاً نسبة السداد الدقيقة لهذا المحل.</div>';
+
+  if (!state.tenants.length){
+    html += '<div class="empty">لا يوجد مستأجرون بعد.</div>';
+  } else if (!unpaid.length){
+    html += '<div class="empty">جميع المستأجرين سدّدوا هذا الشهر.</div>';
+  } else {
+    html += unpaid.map(function(t){
+      return '<div class="list-item" style="cursor:default;">' +
+        '<div><div class="name">' + escapeHtml(t.name||'(بدون اسم)') + '</div><div class="shop">محل ' + escapeHtml(t.shop) + (t.phone?' · '+escapeHtml(t.phone):'') + '</div></div>' +
+        (t.phone ? '<button class="btn-outline btn-sm" data-action="send-reminder" data-id="' + t.id + '">تذكير واتساب</button>' : '<span class="badge" style="background:var(--danger-light);color:var(--danger)">لا يوجد هاتف</span>') +
+      '</div>';
+    }).join('');
+  }
+  return html;
+}
+
+/* ======================================================================
+   تبويب التقارير (للمشرف فقط): تصفية بالتاريخ + تصدير PDF/Excel + سجل التعديلات
+   ====================================================================== */
+function renderReportRecordsList(){
+  var records = getRecordsInRange(state.reportRange.from, state.reportRange.to);
+  var q = (state.reportSearch||'').trim().toLowerCase();
+  if (q){
+    records = records.filter(function(r){
+      return (r.tenantName||'').toLowerCase().indexOf(q) !== -1 || (r.shop||'').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+  var total = sumAmounts(records);
+  var html = '<div class="print-only report-print-header"><h2>' + MARKET_NAME + ' — تقرير التحصيل</h2><div>من ' + state.reportRange.from + ' إلى ' + state.reportRange.to + '</div><div>الإجمالي: ' + formatMoney(total) + ' · عدد العمليات: ' + records.length + '</div></div>';
+  if (!records.length){
+    html += '<div class="empty">لا توجد عمليات تحصيل ضمن هذه الفترة.</div>';
+  } else {
+    html += records.map(function(r){
+      return '<div class="list-item" style="cursor:default;">' +
+        '<div><div class="name">' + escapeHtml(r.tenantName) + '</div><div class="shop">محل ' + escapeHtml(r.shop) + ' · ' + formatDateTime(r.date) + ' · ' + escapeHtml(r.collectorName||'') + '</div></div>' +
+        '<span class="badge">' + formatMoney(r.amount) + '</span>' +
+      '</div>';
+    }).join('');
+  }
+  return html;
+}
+function renderReportsTab(){
+  var records = getRecordsInRange(state.reportRange.from, state.reportRange.to);
+  var total = sumAmounts(records);
+  var uniqueTenants = {};
+  records.forEach(function(r){ uniqueTenants[r.tenantId] = true; });
+
+  var html = '<h2 class="section-title">التقارير</h2>';
+  html += '<div class="card">' +
+    '<label class="field-label">من تاريخ</label>' +
+    '<input class="input" type="date" id="report-from-input" value="' + state.reportRange.from + '">' +
+    '<label class="field-label">إلى تاريخ</label>' +
+    '<input class="input" type="date" id="report-to-input" value="' + state.reportRange.to + '">' +
+    '<button class="btn btn-sm btn-block" data-action="apply-report-range">تحديث الفترة</button>' +
+  '</div>';
+
+  html += '<div class="stat-row">' +
+    '<div class="stat-box"><div class="stat-label">إجمالي الفترة</div><div class="stat-value">' + formatMoney(total) + '</div></div>' +
+    '<div class="stat-box"><div class="stat-label">عدد العمليات</div><div class="stat-value">' + records.length + '</div></div>' +
+    '<div class="stat-box"><div class="stat-label">عدد المستأجرين</div><div class="stat-value">' + Object.keys(uniqueTenants).length + '</div></div>' +
+  '</div>';
+
+  html += '<div class="btn-row" style="margin-bottom:14px;">' +
+    '<button class="btn-outline btn-sm" style="flex:1" data-action="export-report-pdf">طباعة / حفظ PDF</button>' +
+    '<button class="btn-outline btn-sm" style="flex:1" data-action="export-report-excel">تصدير Excel (CSV)</button>' +
+  '</div>';
+
+  html += '<div class="search-wrap">' + ICONS.search + '<input class="input" id="report-search-input" placeholder="تصفية بالاسم أو رقم المحل" value="' + escapeHtml(state.reportSearch) + '"></div>';
+
+  html += '<div id="report-print-area">' + renderReportRecordsList() + '</div>';
+
+  if (state.auditLog.length){
+    html += '<h3 class="sub-title">سجل التعديلات والحذف (' + state.auditLog.length + ')</h3>';
+    html += state.auditLog.slice().reverse().slice(0,30).map(function(a){
+      var desc = a.action === 'edit'
+        ? ('تعديل المبلغ: ' + formatMoney(a.oldAmount) + ' ← ' + formatMoney(a.newAmount))
+        : ('حذف تحصيل بقيمة ' + formatMoney(a.oldAmount));
+      return '<div class="audit-row">' +
+        '<div class="audit-top"><span>' + escapeHtml(a.tenantName) + ' — محل ' + escapeHtml(a.shop) + '</span><span>' + formatDateTime(a.at) + '</span></div>' +
+        '<div class="audit-mid">' + desc + '</div>' +
+        '<div class="audit-bottom">السبب: ' + escapeHtml(a.reason||'—') + ' · بواسطة: ' + escapeHtml(a.byName||'') + '</div>' +
+      '</div>';
+    }).join('');
+  }
+  return html;
+}
+
+/* ======================================================================
+   تبويب الإعدادات (للمشرف فقط)
+   ====================================================================== */
+function renderSettingsTab(){
+  var html = '<h2 class="section-title">الإعدادات</h2>';
+
+  html += '<h3 class="sub-title">رقم استقبال إشعارات التحصيل</h3>';
+  html += '<div class="card">' +
+    '<div class="hint-text">تُرسل نسخة من كل سند تحصيل عبر واتساب لهذا الرقم بالإضافة إلى المستأجر.</div>' +
+    '<input class="input" id="mgmt-number-input" value="' + escapeHtml(state.mgmtNumber) + '" dir="ltr" placeholder="967xxxxxxxxx">' +
+    '<button class="btn btn-sm" data-action="save-mgmt">حفظ الرقم</button>' +
+  '</div>';
+
+  html += '<h3 class="sub-title">إدارة المستخدمين والصلاحيات</h3>';
+  html += '<div class="card">';
+  html += '<div class="hint-text">اسم الدخول لكل مستخدم هو رقم هاتفه، ولكل مستخدم كلمة مرور خاصة به يمكنه تغييرها لاحقاً من زر 🔑 في الأعلى.</div>';
+  html += state.users.map(function(u){
+    return '<div class="list-item" style="cursor:default;">' +
+      '<div><div class="name">' + escapeHtml(u.name||'(بدون اسم)') + '</div><div class="shop">' + escapeHtml(u.phone) + ' · <span class="role-tag">' + (u.role==='admin'?'مشرف':'محصّل') + '</span>' + (u.protected ? ' · حساب أساسي' : '') + '</div></div>' +
+      '<div class="actions">' +
+        '<button class="btn-outline btn-sm" data-action="open-edit-user" data-id="' + u.id + '">تعديل</button>' +
+        (u.protected ? '' : '<button class="btn-danger btn-sm" data-action="delete-user" data-id="' + u.id + '">إزالة</button>') +
+      '</div>' +
+    '</div>';
+  }).join('');
+  html += '<div class="divider"></div>';
+  html += '<button class="btn btn-sm btn-block" data-action="open-add-user">+ إضافة مستخدم جديد</button>';
+  html += '</div>';
+
+  html += '<h3 class="sub-title">النسخ الاحتياطي</h3>';
+  html += '<div class="card">' +
+    '<div class="hint-text">بيانات التطبيق محفوظة على هذا الجهاز فقط. خذ نسخة احتياطية بشكل دوري لتفادي فقدان البيانات عند فقدان الجهاز أو مسح ذاكرة المتصفح.</div>' +
+    '<div class="btn-row">' +
+      '<button class="btn btn-sm" style="flex:1" data-action="export-backup">تنزيل نسخة احتياطية</button>' +
+      '<button class="btn-outline btn-sm" style="flex:1" data-action="trigger-restore-file">استرجاع نسخة احتياطية</button>' +
+    '</div>' +
+  '</div>';
+
+  html += '<h3 class="sub-title">منطقة الخطر</h3>';
+  html += '<div class="danger-zone">' +
+    '<p>مسح جميع البيانات يحذف كل المستأجرين وسجلات التحصيل نهائياً من هذا الجهاز (لا يمس رقم الإدارة أو قائمة المستخدمين أو سجل التعديلات). سيتم تنزيل نسخة احتياطية تلقائياً قبل الحذف.</p>' +
+    '<button class="btn-danger-solid btn-block" data-action="open-erase-confirm">مسح جميع بيانات المستأجرين والتحصيلات</button>' +
+  '</div>';
+
+  return html;
+}
+
+function renderEraseModal(){
+  return '' +
+  '<div class="modal">' +
+    '<div class="modal-content">' +
+      '<div class="modal-header"><h3>تأكيد المسح النهائي</h3><button class="modal-close" data-action="close-erase-confirm">×</button></div>' +
+      '<div class="hint-text">هذا الإجراء لا يمكن التراجع عنه. اكتب كلمة «حذف» في الحقل أدناه للتأكيد. سيتم تنزيل نسخة احتياطية تلقائياً قبل تنفيذ الحذف.</div>' +
+      '<input class="input" id="erase-confirm-input" placeholder="اكتب: حذف" dir="rtl">' +
+      '<div class="error-text" id="erase-error"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn-outline" data-action="close-erase-confirm">إلغاء</button>' +
+        '<button class="btn-danger-solid" data-action="confirm-erase">تأكيد الحذف</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+/* نافذة إضافة / تعديل مستخدم (اسم + هاتف + كلمة مرور + صلاحية) */
+function renderUserModal(){
+  var eu = state.editingUser;
+  var isEdit = !!eu.id;
+  var title = isEdit ? 'تعديل مستخدم' : 'إضافة مستخدم جديد';
+  return '' +
+  '<div class="modal">' +
+    '<div class="modal-content">' +
+      '<div class="modal-header"><h3>' + title + '</h3><button class="modal-close" data-action="close-user-modal">×</button></div>' +
+      '<label class="field-label">الاسم</label>' +
+      '<input class="input" id="user-name-input" placeholder="اسم المستخدم" value="' + escapeHtml(eu.name||'') + '">' +
+      '<label class="field-label">رقم الهاتف (اسم الدخول)</label>' +
+      '<input class="input" id="user-phone-input" dir="ltr" placeholder="7xxxxxxxx" value="' + escapeHtml(eu.phone||'') + '"' + (eu.protected ? ' readonly style="background:var(--bg);color:var(--text-muted)"' : '') + '>' +
+      '<label class="field-label">' + (isEdit ? 'كلمة مرور جديدة (اتركها فارغة للإبقاء على الحالية)' : 'كلمة المرور المبدئية') + '</label>' +
+      '<input class="input" type="text" id="user-password-input" dir="ltr" placeholder="' + (isEdit?'بدون تغيير':'كلمة مرور مبدئية') + '">' +
+      '<label class="field-label">الصلاحية</label>' +
+      '<select class="input" id="user-role-input"' + (eu.protected ? ' disabled style="background:var(--bg);color:var(--text-muted)"' : '') + '>' +
+        '<option value="collector"' + (eu.role!=='admin'?' selected':'') + '>محصّل</option>' +
+        '<option value="admin"' + (eu.role==='admin'?' selected':'') + '>مشرف</option>' +
+      '</select>' +
+      (eu.protected ? '<div class="hint-text">هذا الحساب الأساسي لا يمكن تغيير رقمه أو صلاحيته أو حذفه، لضمان عدم فقدان الدخول للتطبيق نهائياً. يمكن فقط تعديل الاسم أو كلمة المرور.</div>' : '') +
+      '<div class="error-text" id="user-modal-error"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn-outline" data-action="close-user-modal">إلغاء</button>' +
+        '<button class="btn" data-action="save-user">حفظ</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+/* نافذة تغيير كلمة المرور الخاصة بالمستخدم الحالي (متاحة للمشرف والمحصّل) */
+function renderChangePasswordModal(){
+  return '' +
+  '<div class="modal">' +
+    '<div class="modal-content">' +
+      '<div class="modal-header"><h3>تغيير كلمة المرور</h3><button class="modal-close" data-action="close-change-password">×</button></div>' +
+      '<label class="field-label">كلمة المرور الحالية</label>' +
+      '<input class="input" type="password" id="cp-current-input" dir="ltr">' +
+      '<label class="field-label">كلمة المرور الجديدة</label>' +
+      '<input class="input" type="password" id="cp-new-input" dir="ltr">' +
+      '<label class="field-label">تأكيد كلمة المرور الجديدة</label>' +
+      '<input class="input" type="password" id="cp-confirm-input" dir="ltr">' +
+      '<div class="error-text" id="cp-error"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="btn-outline" data-action="close-change-password">إلغاء</button>' +
+        '<button class="btn" data-action="confirm-change-password">حفظ</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ======================================================================
+   أدوات مساعدة للواجهة (رسائل خطأ صغيرة + إشعار toast)
+   ====================================================================== */
+function showInlineError(elId, msg){
+  var el = document.getElementById(elId);
+  if (el){ el.textContent = msg || ''; el.style.display = msg ? 'block' : 'none'; }
+}
+function notify(msg){
+  var el = document.getElementById('toast');
+  if (!el){
+    el = document.createElement('div');
+    el.id = 'toast'; el.className = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(function(){ el.classList.remove('show'); }, 2400);
+}
+
+/* ======================================================================
+   إجراءات المستخدم (Actions)
+   ====================================================================== */
+function handleLoginSubmit(){
+  var phoneInput = document.getElementById('login-phone-input');
+  var passInput = document.getElementById('login-password-input');
+  var normalized = normalizePhone(phoneInput ? phoneInput.value : '');
+  var password = passInput ? passInput.value : '';
+  var user = findUserByPhone(normalized);
+  if (!user){ showInlineError('login-error', 'رقم الهاتف غير مسجّل في التطبيق'); return; }
+  if (String(user.password) !== String(password)){ showInlineError('login-error', 'كلمة المرور غير صحيحة'); return; }
+  var session = { phone: user.phone, name: user.name, role: user.role };
+  state.session = session;
+  saveJSON(KEYS.session, session);
+  state.activeTab = 'collect';
+  render();
+}
+function handleLogout(){
+  state.session = null;
+  localStorage.removeItem(KEYS.session);
+  state.selectedTenantId = null;
+  render();
+}
+
+function setActiveTab(tab){
+  state.activeTab = tab;
+  state.selectedTenantId = null;
+  render();
+}
+
+/* --- مستأجرون --- */
+function openTenantModal(t){ state.editingTenant = t; render(); }
+function openReplaceTenantModal(t){
+  state.editingTenant = { id: t.id, shop: t.shop, name: '', phone: '', _replaceMode: true, _previousName: t.name };
+  render();
+}
+function closeTenantModal(){ state.editingTenant = null; render(); }
+function handleSaveTenant(){
+  var et = state.editingTenant;
+  var name = (document.getElementById('tenant-name-input').value || '').trim();
+  var phone = (document.getElementById('tenant-phone-input').value || '').trim();
+  var shopInput = document.getElementById('tenant-shop-input');
+  var shop = (shopInput ? shopInput.value : (et.shop||'')).trim();
+  var rentInput = document.getElementById('tenant-rent-input');
+  var rent = rentInput ? (parseFloat(rentInput.value) || 0) : 0;
+
+  if (!name || !shop){ showInlineError('tenant-modal-error', 'الاسم ورقم المحل مطلوبان'); return; }
+
+  if (et.id){
+    var t = findTenant(et.id);
+    if (t){ t.name = name; t.phone = phone; t.shop = shop; t.rent = rent; }
+  } else {
+    state.tenants.push({ id: generateId(), name: name, phone: phone, shop: shop, rent: rent });
+  }
+  saveJSON(KEYS.tenants, state.tenants);
+  state.editingTenant = null;
+  notify('تم حفظ بيانات المستأجر');
+  render();
+}
+function handleDeleteTenant(id){
+  if (!confirm('هل أنت متأكد من حذف هذا المستأجر؟ سجلات تحصيلاته السابقة ستبقى محفوظة في الملخص ولن تتأثر.')) return;
+  state.tenants = state.tenants.filter(function(t){ return t.id !== id; });
+  saveJSON(KEYS.tenants, state.tenants);
+  render();
+}
+
+function openImportModal(){ state.showImportModal = true; render(); }
+function closeImportModal(){ state.showImportModal = false; render(); }
+function handleImportTenantsFile(file){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var data;
+    try { data = JSON.parse(e.target.result); } catch(err){ alert('ملف JSON غير صالح'); return; }
+    if (!Array.isArray(data)){ alert('الملف ليس قائمة صحيحة'); return; }
+    var added = 0, updated = 0;
+    data.forEach(function(item){
+      if (!item || !item.shop) return;
+      var existing = null;
+      for (var i=0;i<state.tenants.length;i++){ if (state.tenants[i].shop === item.shop){ existing = state.tenants[i]; break; } }
+      if (existing){
+        if (item.name != null) existing.name = item.name;
+        if (item.phone != null) existing.phone = item.phone;
+        updated++;
+      } else {
+        state.tenants.push({ id: generateId(), shop: item.shop, name: item.name||'', phone: item.phone||'', rent: item.rent||0 });
+        added++;
+      }
+    });
+    saveJSON(KEYS.tenants, state.tenants);
+    state.showImportModal = false;
+    notify('تمت إضافة ' + added + ' وتحديث ' + updated);
+    render();
+  };
+  reader.readAsText(file);
+}
+
+function openHistoryModal(id){ var t = findTenant(id); if (t){ state.historyTenant = t; render(); } }
+function closeHistoryModal(){ state.historyTenant = null; render(); }
+
+/* --- التحصيل --- */
+function pickTenantForCollection(id){
+  state.selectedTenantId = id;
+  state.collectSearch = '';
+  render();
+}
+function changeSelectedTenant(){
+  state.selectedTenantId = null;
+  render();
+}
+function buildReceiptMessage(record){
+  return 'سند تحصيل - ' + MARKET_NAME + '\n' +
+    '-------------------\n' +
+    'المستأجر: ' + record.tenantName + '\n' +
+    'المحل: ' + record.shop + '\n' +
+    'المبلغ: ' + formatMoney(record.amount) + '\n' +
+    'التاريخ: ' + formatDateTime(record.date) + '\n' +
+    'المحصّل: ' + record.collectorName + '\n' +
+    '-------------------\n' +
+    'شكراً لتعاملكم';
+}
+function handleSaveCollection(){
+  var amountInput = document.getElementById('collect-amount-input');
+  var amount = amountInput ? parseFloat(amountInput.value) : NaN;
+  if (!state.selectedTenantId || !amount || amount <= 0){
+    showInlineError('collect-error', 'يرجى اختيار مستأجر وإدخال مبلغ صحيح أكبر من صفر');
+    return;
+  }
+  var tenant = findTenant(state.selectedTenantId);
+  if (!tenant) return;
+  var record = {
+    id: generateId(),
+    tenantId: tenant.id,
+    tenantName: tenant.name,
+    shop: tenant.shop,
+    amount: amount,
+    date: new Date().toISOString(),
+    collectorName: state.session.name,
+    collectorPhone: state.session.phone
+  };
+  state.records.push(record);
+  saveJSON(KEYS.records, state.records);
+  state.receiptRecord = record;
+  state.selectedTenantId = null;
+  state.collectSearch = '';
+  render();
+}
+function closeReceiptModal(){ state.receiptRecord = null; render(); }
+
+function sendWhatsApp(phone, message){
+  if (!phone) return false;
+  var intl = toInternational(phone);
+  var url = 'https://wa.me/' + intl + '?text=' + encodeURIComponent(message);
+  var win = null;
+  try { win = window.open(url, '_blank'); } catch(e){ win = null; }
+  if (!win) notify('تعذّر فتح واتساب تلقائياً. تأكد من السماح بالنوافذ المنبثقة، أو استخدم زر نسخ النص.');
+  return !!win;
+}
+function sendReceiptToTenant(){
+  var r = state.receiptRecord; if (!r) return;
+  var tenant = findTenant(r.tenantId);
+  if (!tenant || !tenant.phone) return;
+  sendWhatsApp(tenant.phone, buildReceiptMessage(r));
+}
+function sendReceiptToAdmin(){
+  var r = state.receiptRecord; if (!r) return;
+  sendWhatsApp(state.mgmtNumber, buildReceiptMessage(r));
+}
+function copyReceiptText(){
+  var r = state.receiptRecord; if (!r) return;
+  var text = buildReceiptMessage(r);
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ notify('تم نسخ نص السند'); }).catch(function(){ fallbackCopy(text); });
+  } else { fallbackCopy(text); }
+}
+function fallbackCopy(text){
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    notify('تم نسخ نص السند');
+  } catch(e){ alert(text); }
+}
+/* آلية موحّدة وأكثر متانة لإخراج أي ملف من التطبيق (صورة سند / نسخة احتياطية / تقرير):
+   1) تُجرَّب واجهة المشاركة الأصلية للجهاز أولاً — تعمل بشكل ممتاز داخل متصفح حقيقي (كروم) أو تطبيق مُنشأ عبر PWABuilder،
+      وتتيح للمستخدم الحفظ في أي مكان أو الإرسال مباشرة عبر واتساب/تيليجرام/البريد.
+   2) إن لم تتوفر: تنزيل مباشر عبر رابط (يعمل في المتصفح العادي، وقد لا يعمل داخل بعض تطبيقات
+      "تحويل الموقع إلى تطبيق" الجاهزة التي لا تدعم هذا النوع من التنزيل).
+   3) كحل أخير: فتح الملف في نافذة/تبويب جديد ليتمكن المستخدم من حفظه يدوياً من هناك. */
+function shareOrDownloadBlob(blob, filename, shareTitle){
+  var file = null;
+  try { file = new File([blob], filename, { type: blob.type }); } catch(e){ file = null; }
+
+  if (file && window.navigator && navigator.canShare && navigator.share){
+    var canShareFile = false;
+    try { canShareFile = navigator.canShare({ files: [file] }); } catch(e){ canShareFile = false; }
+    if (canShareFile){
+      navigator.share({ files: [file], title: shareTitle || filename }).catch(function(){ /* المستخدم ألغى المشاركة — لا حاجة لأي إجراء */ });
+      return;
+    }
+  }
+
+  try {
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.download = filename;
+    link.href = url;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    notify('تم تنزيل الملف');
+  } catch(e){
+    try {
+      var url2 = URL.createObjectURL(blob);
+      window.open(url2, '_blank');
+      notify('تعذّر التنزيل التلقائي — تم فتح الملف في نافذة جديدة، احفظه من هناك يدوياً');
+    } catch(e2){
+      notify('تعذّر إخراج الملف على هذا الجهاز. جرّب فتح التطبيق من متصفح Chrome مباشرة بدل تطبيق تحويل المواقع.');
+    }
+  }
+}
+function fallbackDataUrlDownload(dataUrl, filename){
+  try {
+    var link = document.createElement('a');
+    link.download = filename; link.href = dataUrl;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    notify('تم تنزيل صورة السند');
+  } catch(e){ notify('تعذّر إنشاء صورة السند على هذا الجهاز'); }
+}
+function downloadReceiptImage(){
+  var r = state.receiptRecord; if (!r) return;
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 640; canvas.height = 420;
+    var ctx = canvas.getContext('2d');
+    ctx.direction = 'rtl';
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle = '#1B5FAE'; ctx.lineWidth = 6; ctx.strokeRect(3,3,canvas.width-6,canvas.height-6);
+    ctx.fillStyle = '#1B5FAE';
+    ctx.font = 'bold 26px Cairo, Tahoma, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(MARKET_NAME + ' - سند تحصيل', canvas.width/2, 55);
+    ctx.strokeStyle = '#E3E6EA'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(40,75); ctx.lineTo(canvas.width-40,75); ctx.stroke();
+    ctx.fillStyle = '#1F2430';
+    ctx.font = '20px Cairo, Tahoma, Arial, sans-serif';
+    ctx.textAlign = 'right';
+    var lines = [
+      'المستأجر: ' + r.tenantName,
+      'المحل: ' + r.shop,
+      'المبلغ: ' + formatMoney(r.amount),
+      'التاريخ: ' + formatDateTime(r.date),
+      'المحصّل: ' + r.collectorName
+    ];
+    var y = 130;
+    lines.forEach(function(line){ ctx.fillText(line, canvas.width-40, y); y += 46; });
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#6B7280';
+    ctx.font = '15px Cairo, Tahoma, Arial, sans-serif';
+    ctx.fillText('شكراً لتعاملكم', canvas.width/2, canvas.height-30);
+
+    var filename = 'سند-' + r.shop + '-' + r.date.slice(0,10) + '.png';
+    if (canvas.toBlob){
+      canvas.toBlob(function(blob){
+        if (blob) shareOrDownloadBlob(blob, filename, 'سند تحصيل - ' + MARKET_NAME);
+        else fallbackDataUrlDownload(canvas.toDataURL('image/png'), filename);
+      }, 'image/png');
+    } else {
+      fallbackDataUrlDownload(canvas.toDataURL('image/png'), filename);
+    }
+  } catch(e){ notify('تعذّر إنشاء صورة السند على هذا الجهاز'); }
+}
+
+/* --- الإعدادات --- */
+function handleSaveMgmt(){
+  var v = (document.getElementById('mgmt-number-input').value || '').trim();
+  if (!v) return;
+  state.mgmtNumber = v;
+  saveJSON(KEYS.mgmt, v);
+  notify('تم حفظ رقم الإدارة');
+  render();
+}
+/* --- إدارة المستخدمين --- */
+function openAddUserModal(){ state.editingUser = {}; render(); }
+function openEditUserModal(id){ var u = findUserById(id); if (u) state.editingUser = Object.assign({}, u); render(); }
+function closeUserModal(){ state.editingUser = null; render(); }
+function handleSaveUser(){
+  var eu = state.editingUser;
+  var name = (document.getElementById('user-name-input').value||'').trim();
+  var phone = normalizePhone(document.getElementById('user-phone-input').value||'');
+  var password = document.getElementById('user-password-input').value||'';
+  var roleSelect = document.getElementById('user-role-input');
+  var role = eu.protected ? 'admin' : (roleSelect ? roleSelect.value : 'collector');
+
+  if (!name){ showInlineError('user-modal-error', 'الاسم مطلوب'); return; }
+  if (!eu.protected){
+    if (!phone || phone.length < 7){ showInlineError('user-modal-error', 'رقم هاتف غير صحيح'); return; }
+    var dup = state.users.some(function(u){ return u.phone === phone && u.id !== eu.id; });
+    if (dup){ showInlineError('user-modal-error', 'هذا الرقم مستخدم بالفعل من قبل مستخدم آخر'); return; }
+  }
+  if (!eu.id && !password){ showInlineError('user-modal-error', 'يرجى تحديد كلمة مرور مبدئية للمستخدم الجديد'); return; }
+
+  if (eu.id){
+    var u = findUserById(eu.id);
+    if (u){
+      u.name = name;
+      if (!u.protected){ u.phone = phone; u.role = role; }
+      if (password) u.password = password;
+    }
+  } else {
+    state.users.push({ id: generateId(), phone: phone, name: name, password: password, role: role, protected: false });
+  }
+  saveJSON(KEYS.users, state.users);
+  refreshSessionFromUsers();
+  state.editingUser = null;
+  notify('تم حفظ بيانات المستخدم');
+  render();
+}
+function handleDeleteUser(id){
+  var u = findUserById(id);
+  if (!u || u.protected) return;
+  if (!confirm('هل تريد إزالة هذا المستخدم؟ لن يتمكن من الدخول للتطبيق بعد الآن.')) return;
+  state.users = state.users.filter(function(x){ return x.id !== id; });
+  saveJSON(KEYS.users, state.users);
+  render();
+}
+function openChangePasswordModal(){ state.changePasswordOpen = true; render(); }
+function closeChangePasswordModal(){ state.changePasswordOpen = false; render(); }
+function handleConfirmChangePassword(){
+  var cur = document.getElementById('cp-current-input').value||'';
+  var next = document.getElementById('cp-new-input').value||'';
+  var confirmVal = document.getElementById('cp-confirm-input').value||'';
+  var u = findUserByPhone(state.session.phone);
+  if (!u){ showInlineError('cp-error', 'تعذّر العثور على الحساب'); return; }
+  if (String(u.password) !== String(cur)){ showInlineError('cp-error', 'كلمة المرور الحالية غير صحيحة'); return; }
+  if (!next || next.length < 4){ showInlineError('cp-error', 'كلمة المرور الجديدة يجب ألا تقل عن 4 أحرف/أرقام'); return; }
+  if (next !== confirmVal){ showInlineError('cp-error', 'كلمتا المرور الجديدتان غير متطابقتين'); return; }
+  u.password = next;
+  saveJSON(KEYS.users, state.users);
+  state.changePasswordOpen = false;
+  notify('تم تغيير كلمة المرور بنجاح');
+  render();
+}
+
+/* --- تعديل / حذف تحصيل مسجَّل (للمشرف فقط، مع سجل مراجعة) --- */
+function openEditRecordModal(id){ var r = findRecordById(id); if (r) { state.editingRecord = { record: r, mode: 'edit' }; render(); } }
+function openDeleteRecordModal(id){ var r = findRecordById(id); if (r) { state.editingRecord = { record: r, mode: 'delete' }; render(); } }
+function closeRecordEditModal(){ state.editingRecord = null; render(); }
+function addAuditEntry(fields){
+  var entry = Object.assign({
+    id: generateId(),
+    at: new Date().toISOString(),
+    byName: state.session ? state.session.name : '',
+    byPhone: state.session ? state.session.phone : ''
+  }, fields);
+  state.auditLog.push(entry);
+  saveJSON(KEYS.auditLog, state.auditLog);
+}
+function handleConfirmEditRecord(){
+  var ctx = state.editingRecord; if (!ctx) return;
+  var ref = ctx.record;
+  var amountInput = document.getElementById('record-edit-amount');
+  var dateInput = document.getElementById('record-edit-date');
+  var reasonInput = document.getElementById('record-edit-reason');
+  var newAmount = amountInput ? parseFloat(amountInput.value) : NaN;
+  var newDateLocal = dateInput ? dateInput.value : '';
+  var reason = reasonInput ? reasonInput.value.trim() : '';
+  if (!newAmount || newAmount <= 0){ showInlineError('record-edit-error', 'يرجى إدخال مبلغ صحيح أكبر من صفر'); return; }
+  if (!newDateLocal){ showInlineError('record-edit-error', 'يرجى تحديد التاريخ والوقت'); return; }
+  if (!reason){ showInlineError('record-edit-error', 'يرجى كتابة سبب التعديل'); return; }
+  var newDate = new Date(newDateLocal).toISOString();
+
+  var live = findRecordById(ref.id); if (!live) return;
+  var oldAmount = live.amount, oldDate = live.date;
+  live.amount = newAmount;
+  live.date = newDate;
+  saveJSON(KEYS.records, state.records);
+
+  addAuditEntry({ action:'edit', recordId: ref.id, tenantName: ref.tenantName, shop: ref.shop, oldAmount: oldAmount, newAmount: newAmount, oldDate: oldDate, newDate: newDate, reason: reason });
+
+  state.editingRecord = null;
+  notify('تم حفظ تعديل التحصيل');
+  render();
+}
+function handleConfirmDeleteRecord(){
+  var ctx = state.editingRecord; if (!ctx) return;
+  var ref = ctx.record;
+  var reasonInput = document.getElementById('record-edit-reason');
+  var reason = reasonInput ? reasonInput.value.trim() : '';
+  if (!reason){ showInlineError('record-edit-error', 'يرجى كتابة سبب الحذف'); return; }
+
+  state.records = state.records.filter(function(x){ return x.id !== ref.id; });
+  saveJSON(KEYS.records, state.records);
+
+  addAuditEntry({ action:'delete', recordId: ref.id, tenantName: ref.tenantName, shop: ref.shop, oldAmount: ref.amount, oldDate: ref.date, reason: reason });
+
+  state.editingRecord = null;
+  notify('تم حذف التحصيل');
+  render();
+}
+
+/* --- التنبيهات --- */
+function sendReminder(id){
+  var t = findTenant(id); if (!t || !t.phone) return;
+  var msg = 'تذكير من ' + MARKET_NAME + '\nعزيزي ' + t.name + '،\nنود تذكيركم بأن إيجار المحل رقم ' + t.shop + ' لم يُسجَّل بعد لهذا الشهر. نرجو التكرم بالتواصل مع إدارة السوق لتسديده في أقرب وقت.\nشكراً لتعاونكم.';
+  sendWhatsApp(t.phone, msg);
+}
+
+/* --- التقارير --- */
+function applyReportRange(){
+  var fromInput = document.getElementById('report-from-input');
+  var toInput = document.getElementById('report-to-input');
+  state.reportRange = {
+    from: fromInput ? fromInput.value : state.reportRange.from,
+    to: toInput ? toInput.value : state.reportRange.to
+  };
+  render();
+}
+function exportReportPdf(){ window.print(); }
+function csvCell(v){
+  var s = String(v == null ? '' : v);
+  if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g,'""') + '"';
+  return s;
+}
+function exportReportExcel(){
+  var records = getRecordsInRange(state.reportRange.from, state.reportRange.to);
+  var q = (state.reportSearch||'').trim().toLowerCase();
+  if (q){
+    records = records.filter(function(r){
+      return (r.tenantName||'').toLowerCase().indexOf(q) !== -1 || (r.shop||'').toLowerCase().indexOf(q) !== -1;
+    });
+  }
+  var header = ['التاريخ','الوقت','المستأجر','المحل','المبلغ','المحصّل'];
+  var rows = [header];
+  records.forEach(function(r){
+    rows.push([formatDate(r.date), formatTime(r.date), r.tenantName, r.shop, r.amount, r.collectorName||'']);
+  });
+  var csv = rows.map(function(row){ return row.map(csvCell).join(','); }).join('\r\n');
+  var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  shareOrDownloadBlob(blob, 'تقرير-تحصيل-' + state.reportRange.from + '-الى-' + state.reportRange.to + '.csv', 'تقرير تحصيل ' + MARKET_NAME);
+}
+
+function exportBackup(){
+  var backup = {
+    type: 'souq48-backup', version: 2, exportedAt: new Date().toISOString(),
+    tenants: state.tenants, records: state.records,
+    mgmtNumber: state.mgmtNumber, users: state.users, auditLog: state.auditLog
+  };
+  try {
+    var blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    shareOrDownloadBlob(blob, 'souq48-backup-' + new Date().toISOString().slice(0,10) + '.json', 'نسخة احتياطية - ' + MARKET_NAME);
+  } catch(e){ notify('تعذّر إنشاء النسخة الاحتياطية على هذا الجهاز'); }
+}
+function handleRestoreFile(file){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var data;
+    try { data = JSON.parse(e.target.result); } catch(err){ alert('تعذّرت قراءة الملف. تأكد أنه ملف نسخة احتياطية صحيح.'); return; }
+    if (!data || !Array.isArray(data.tenants) || !Array.isArray(data.records)){ alert('ملف النسخة الاحتياطية غير صالح'); return; }
+    if (!confirm('سيتم استبدال جميع البيانات الحالية ببيانات هذه النسخة الاحتياطية. هل أنت متأكد؟')) return;
+    state.tenants = data.tenants;
+    state.records = data.records;
+    if (data.mgmtNumber) state.mgmtNumber = data.mgmtNumber;
+    if (Array.isArray(data.users) && data.users.length){
+      state.users = data.users;
+    } else if (data.adminName || Array.isArray(data.collectors)){
+      // نسخة احتياطية من إصدار سابق (بدون كلمات مرور) — تُحوَّل تلقائياً للنظام الجديد بكلمة مرور مؤقتة
+      var legacyUsers = [{ id:'root-admin', phone: normalizePhone(ADMIN_PHONE), name: data.adminName || DEFAULT_ADMIN_NAME, password: TEMP_MIGRATION_PASSWORD, role:'admin', protected:true }];
+      (data.collectors||[]).forEach(function(c){
+        legacyUsers.push({ id: generateId(), phone: normalizePhone(c.phone), name: c.name||'', password: TEMP_MIGRATION_PASSWORD, role:'collector', protected:false });
+      });
+      state.users = legacyUsers;
+    }
+    if (Array.isArray(data.auditLog)) state.auditLog = data.auditLog;
+    saveJSON(KEYS.tenants, state.tenants);
+    saveJSON(KEYS.records, state.records);
+    saveJSON(KEYS.mgmt, state.mgmtNumber);
+    saveJSON(KEYS.users, state.users);
+    saveJSON(KEYS.auditLog, state.auditLog);
+    refreshSessionFromUsers();
+    notify('تم استرجاع النسخة الاحتياطية بنجاح');
+    render();
+  };
+  reader.readAsText(file);
+}
+
+function openEraseModal(){ state.eraseModal = true; render(); }
+function closeEraseModal(){ state.eraseModal = false; render(); }
+function handleConfirmErase(){
+  var input = document.getElementById('erase-confirm-input');
+  var val = input ? input.value.trim() : '';
+  if (val !== 'حذف'){ showInlineError('erase-error', 'اكتب كلمة «حذف» بالضبط للتأكيد'); return; }
+  exportBackup();
+  state.tenants = [];
+  state.records = [];
+  saveJSON(KEYS.tenants, state.tenants);
+  saveJSON(KEYS.records, state.records);
+  state.eraseModal = false;
+  notify('تم مسح البيانات، وتم تنزيل نسخة احتياطية قبل الحذف');
+  render();
+}
+
+/* ======================================================================
+   ربط الأحداث (تفويض واحد على مستوى الجذر — يعمل دائماً حتى بعد إعادة رسم المحتوى)
+   ====================================================================== */
+function handleGlobalClick(e){
+  var el = e.target.closest('[data-action]');
+  if (!el) return;
+  var action = el.dataset.action;
+  var id = el.dataset.id;
+  switch(action){
+    case 'switch-tab': setActiveTab(el.dataset.tab); break;
+    case 'logout': handleLogout(); break;
+
+    case 'open-add-tenant': openTenantModal({}); break;
+    case 'open-edit-tenant': openTenantModal(Object.assign({}, findTenant(id))); break;
+    case 'open-replace-tenant': openReplaceTenantModal(findTenant(id)); break;
+    case 'delete-tenant': handleDeleteTenant(id); break;
+    case 'close-tenant-modal': closeTenantModal(); break;
+    case 'save-tenant': handleSaveTenant(); break;
+
+    case 'open-import': openImportModal(); break;
+    case 'close-import': closeImportModal(); break;
+    case 'trigger-import-file': document.getElementById('import-json-input').click(); break;
+
+    case 'open-history': openHistoryModal(id); break;
+    case 'close-history': closeHistoryModal(); break;
+
+    case 'pick-tenant': pickTenantForCollection(id); break;
+    case 'change-selected-tenant': changeSelectedTenant(); break;
+    case 'save-collection': handleSaveCollection(); break;
+    case 'close-receipt': closeReceiptModal(); break;
+    case 'send-tenant-whatsapp': sendReceiptToTenant(); break;
+    case 'send-admin-whatsapp': sendReceiptToAdmin(); break;
+    case 'copy-receipt': copyReceiptText(); break;
+    case 'download-receipt': downloadReceiptImage(); break;
+
+    case 'save-mgmt': handleSaveMgmt(); break;
+    case 'export-backup': exportBackup(); break;
+    case 'trigger-restore-file': document.getElementById('restore-file-input').click(); break;
+    case 'open-erase-confirm': openEraseModal(); break;
+    case 'close-erase-confirm': closeEraseModal(); break;
+    case 'confirm-erase': handleConfirmErase(); break;
+
+    case 'open-add-user': openAddUserModal(); break;
+    case 'open-edit-user': openEditUserModal(id); break;
+    case 'close-user-modal': closeUserModal(); break;
+    case 'save-user': handleSaveUser(); break;
+    case 'delete-user': handleDeleteUser(id); break;
+    case 'open-change-password': openChangePasswordModal(); break;
+    case 'close-change-password': closeChangePasswordModal(); break;
+    case 'confirm-change-password': handleConfirmChangePassword(); break;
+
+    case 'open-edit-record': openEditRecordModal(id); break;
+    case 'open-delete-record': openDeleteRecordModal(id); break;
+    case 'close-record-edit': closeRecordEditModal(); break;
+    case 'confirm-edit-record': handleConfirmEditRecord(); break;
+    case 'confirm-delete-record': handleConfirmDeleteRecord(); break;
+
+    case 'send-reminder': sendReminder(id); break;
+
+    case 'apply-report-range': applyReportRange(); break;
+    case 'export-report-pdf': exportReportPdf(); break;
+    case 'export-report-excel': exportReportExcel(); break;
+  }
+}
+
+function handleGlobalSubmit(e){
+  if (e.target && e.target.id === 'login-form'){
+    e.preventDefault();
+    handleLoginSubmit();
+  }
+}
+
+function handleGlobalInput(e){
+  if (e.target.id === 'tenant-search-input'){
+    state.tenantSearch = e.target.value;
+    var c1 = document.getElementById('tenant-list-items');
+    if (c1) c1.innerHTML = renderTenantListItems(getFilteredTenants(state.tenantSearch));
+  } else if (e.target.id === 'collect-search-input'){
+    state.collectSearch = e.target.value;
+    var c2 = document.getElementById('collect-suggestions');
+    if (c2) c2.innerHTML = renderCollectSuggestions(state.collectSearch);
+  } else if (e.target.id === 'report-search-input'){
+    state.reportSearch = e.target.value;
+    var c3 = document.getElementById('report-print-area');
+    if (c3) c3.innerHTML = renderReportRecordsList();
+  }
+}
+
+function handleGlobalKeydown(e){
+  if (e.key === 'Enter' && e.target && e.target.id === 'collect-amount-input'){
+    e.preventDefault();
+    handleSaveCollection();
+  }
+}
+
+function handleGlobalChange(e){
+  if (e.target.id === 'restore-file-input' && e.target.files[0]) handleRestoreFile(e.target.files[0]);
+  if (e.target.id === 'import-json-input' && e.target.files[0]) handleImportTenantsFile(e.target.files[0]);
+}
+
+/* ======================================================================
+   بدء التشغيل
+   ====================================================================== */
+function init(){
+  var appRoot = document.getElementById('app');
+  appRoot.addEventListener('click', handleGlobalClick);
+  appRoot.addEventListener('submit', handleGlobalSubmit);
+  appRoot.addEventListener('input', handleGlobalInput);
+  appRoot.addEventListener('keydown', handleGlobalKeydown);
+  document.body.addEventListener('change', handleGlobalChange);
+  render();
+
+  // تسجيل الخدمة العاملة في الخلفية (Service Worker) لتفعيل العمل بدون إنترنت والتثبيت كتطبيق
+  // هذا اختياري تماماً: إن فشل (مثلاً عند فتح الملف مباشرة بدون استضافة) يستمر التطبيق بالعمل بشكل طبيعي
+  if ('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('./sw.js').catch(function(){ /* تجاهل بصمت */ });
+    });
+  }
+}
+
+if (document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
+})();
+</script>
+</body>
+</html>
