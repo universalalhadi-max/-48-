@@ -1,0 +1,7 @@
+souq48.db
+*.db
+__pycache__/
+*.pyc
+venv/
+env/
+.pytest_cache/
